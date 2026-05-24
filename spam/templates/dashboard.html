@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <h3>AI Spam Dashboard</h3>
+    <div class="nav-right">
+        <a href="/home">Home</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<!-- GRID -->
+<div class="grid">
+
+    <!-- UPLOAD -->
+    <div class="card">
+        <h2>Upload CSV 📁</h2>
+        <form action="/upload_csv" method="POST" enctype="multipart/form-data">
+            <input type="file" name="csvfile" accept=".csv" required>
+            <button>Analyze CSV</button>
+        </form>
+    </div>
+
+    <!-- AUDIO -->
+    <div class="card">
+        <h2>Upload Audio 🎤</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="audio" required>
+            <button>Upload</button>
+        </form>
+    </div>
+
+    <!-- STATS -->
+    <div class="card">
+        <h2>Dataset Stats 📊</h2>
+
+        <p>Spam Calls: <b style="color:red">{{ spam }}</b></p>
+        <p>Normal Calls: <b style="color:lightgreen">{{ normal }}</b></p>
+
+        <canvas id="chart"></canvas>
+    </div>
+
+</div>
+
+<!-- CHART SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const ctx = document.getElementById("chart");
+
+    let chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: ["Spam", "Normal"],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ["#ef4444", "#22c55e"],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: "white" }
+                }
+            }
+        }
+    });
+
+    // UPDATE FUNCTION
+    async function updateChart() {
+        try {
+            const res = await fetch("/chart-data");
+            const data = await res.json();
+
+            chart.data.datasets[0].data = [
+                data.spam,
+                data.normal
+            ];
+
+            chart.update();
+
+        } catch (err) {
+            console.log("Chart error:", err);
+        }
+    }
+
+    updateChart();
+    setInterval(updateChart, 3000);
+
+});
+</script>
+
+</body>
+</html>
